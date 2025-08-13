@@ -130,7 +130,7 @@ const WebcamMood = () => {
           // Save to localStorage
           saveCurrentMood({
             moodType: mapMoodToType(mood),
-            intensity: expressions[mood] * 5, // Scale 0-1 to 0-5
+            intensity: (expressions[mood] as number) * 5,
             source: "webcam",
           });
         }
