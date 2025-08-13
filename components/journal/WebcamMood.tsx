@@ -94,43 +94,54 @@ const WebcamMood = () => {
     intervalRef.current = setInterval(async () => {
       if (!videoRef.current || !canvasRef.current) return;
 
-      const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions();
+      try {
+        const detections = await faceapi
+          .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceExpressions();
 
-      const displaySize = {
-        width: videoRef.current.width,
-        height: videoRef.current.height,
-      };
+        const displaySize = {
+          width: videoRef.current.width,
+          height: videoRef.current.height,
+        };
 
-      const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-      }
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          faceapi.draw.drawDetections(canvas, resizedDetections);
+          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+          faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+        }
 
-      if (detections.length > 0) {
-        const expressions = detections[0].expressions;
-        const mood = (
-          Object.keys(expressions) as (keyof typeof expressions)[]
-        ).reduce((a, b) => (expressions[a] > expressions[b] ? a : b));
+        if (detections.length > 0) {
+          const expressions = detections[0].expressions;
+          // Fixed TypeScript issue with proper type assertion
+          const mood = (
+            Object.keys(expressions) as Array<keyof typeof expressions>
+          ).reduce((a, b) => (expressions[a] > expressions[b] ? a : b));
 
-        setDetectedMood(mapMoodName(mood));
-        const moodAdvice = getMoodAdvice(mapMoodToType(mood));
-        setAdvice(moodAdvice);
+          setDetectedMood(mapMoodName(mood));
+          const moodAdvice = getMoodAdvice(mapMoodToType(mood));
+          setAdvice(moodAdvice);
 
-        // Save to localStorage
-        saveCurrentMood({
-          moodType: mapMoodToType(mood),
-          intensity: expressions[mood] * 5, // Scale 0-1 to 0-5
-          source: "webcam",
-        });
+          // Save to localStorage
+          saveCurrentMood({
+            moodType: mapMoodToType(mood),
+            intensity: expressions[mood] * 5, // Scale 0-1 to 0-5
+            source: "webcam",
+          });
+        }
+      } catch (error) {
+        console.error("Error during face detection:", error);
+        // Optionally show a toast for detection errors
+        // toast({
+        //   title: "Detection error",
+        //   description: "Error occurred during mood detection.",
+        //   variant: "destructive",
+        // });
       }
     }, 100);
   };
