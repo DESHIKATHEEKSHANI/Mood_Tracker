@@ -5,17 +5,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
-  experimental: {
-    fontLoaders: [
-      {
-        loader: 'next/font',
-        options: {
-          timeout: 20000 // Increased timeout to 20 seconds
-        }
-      }
-    ],
-    cache: false // Disable webpack file system cache
-  }
+
+  // Removed invalid experimental props
+  // Fonts should now be handled with `next/font` imports directly in your code
 };
 
 module.exports = nextConfig;
